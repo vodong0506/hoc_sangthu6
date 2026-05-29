@@ -18,12 +18,21 @@
             <a href="<?php echo BASE_URL; ?>/">Trang Chủ</a>
             <a href="<?php echo BASE_URL; ?>/product">Sản Phẩm</a>
             <a href="<?php echo BASE_URL; ?>/category">Danh Mục</a>
+            <a href="<?php echo BASE_URL; ?>/admin">Quản Trị</a>
             <a href="<?php echo BASE_URL; ?>/default/about">Giới Thiệu</a>
             <a href="<?php echo BASE_URL; ?>/default/contact">Liên Hệ</a>
         </nav>
 
         <div class="header-actions">
-            <a href="<?php echo BASE_URL; ?>/product/create" class="btn btn-accent">Thêm Sản Phẩm</a>
+            <a href="<?php echo BASE_URL; ?>/product/cart" class="btn btn-accent">
+                🛒 Giỏ Hàng
+                <?php 
+                $cart_count = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'quantity')) : 0;
+                if ($cart_count > 0) {
+                    echo '<span class="cart-badge">' . $cart_count . '</span>';
+                }
+                ?>
+            </a>
         </div>
     </div>
 </header>
@@ -178,5 +187,19 @@
         .site-nav a {
             font-size: 13px;
         }
+    }
+
+    .cart-badge {
+        background-color: #ef4444;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: 6px;
+        display: inline-block;
+        line-height: 1;
+        min-width: 18px;
+        text-align: center;
     }
 </style>

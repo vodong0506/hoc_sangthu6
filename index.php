@@ -1,43 +1,41 @@
 <?php
+// Bắt đầu session ở đầu file index.php
 session_start();
 
 if (!defined('BASE_URL')) {
-    define('BASE_URL', '/lab_02');
+    define('BASE_URL', '/lab03');
 }
 
+require_once 'app/models/ProductModel.php';
+
+// Product/add
 $url = $_GET['url'] ?? '';
-$url = trim($url, '/');
+$url = rtrim($url, '/');
 $url = filter_var($url, FILTER_SANITIZE_URL);
-$url = $url === '' ? [] : explode('/', $url);
+$url = explode('/', $url);
 
-// Mặc định controller và action
-$controllerName = isset($url[0]) && $url[0] !== '' ? ucfirst($url[0]) . 'Controller' : 'DefaultController';
-$action = isset($url[1]) && $url[1] !== '' ? $url[1] : 'index';
+// Kiểm tra phần đầu tiên của URL để xác định controller
+$controllerName = isset($url[0]) && $url[0] != '' ? ucfirst($url[0]) . 'Controller' : 'DefaultController';
 
-$controllerFile = __DIR__ . '/app/controllers/' . $controllerName . '.php';
-if (!file_exists($controllerFile)) {
-    http_response_code(404);
-    exit('Controller not found');
+// Kiểm tra phần thứ hai của URL để xác định action
+$action = isset($url[1]) && $url[1] != '' ? $url[1] : 'index';
+
+// die ("controller=$controllerName - action=$action");
+
+// Kiểm tra xem controller và action có tồn tại không
+if (!file_exists('app/controllers/' . $controllerName . '.php')) {
+    // Xử lý không tìm thấy controller
+    die('Controller not found');
 }
 
-require_once $controllerFile;
-
-if (!class_exists($controllerName)) {
-    http_response_code(404);
-    exit('Controller class not found');
-}
+require_once 'app/controllers/' . $controllerName . '.php';
 
 $controller = new $controllerName();
 
 if (!method_exists($controller, $action)) {
-    http_response_code(404);
-    exit('Action not found');
+    // Xử lý không tìm thấy action
+    die('Action not found');
 }
 
-$pathParams = array_slice($url, 2);
-$singleParamActions = ['edit', 'delete', 'show', 'getApi'];
-if (empty($pathParams) && isset($_GET['id']) && in_array($action, $singleParamActions, true)) {
-    $pathParams[] = $_GET['id'];
-}
-
-call_user_func_array([$controller, $action], $pathParams);
+// Gọi action với các tham số còn lại (nếu có)
+call_user_func_array([$controller, $action], array_slice($url, 2));
