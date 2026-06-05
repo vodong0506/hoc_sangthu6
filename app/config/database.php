@@ -2,7 +2,7 @@
 class Database
 {
     private $host = "localhost";
-    private $db_name = "badminton_store";
+    private $db_name = "badminton_shop";
     private $username = "root";
     private $password = "";
     public $conn;

@@ -23,16 +23,29 @@
             <a href="<?php echo BASE_URL; ?>/default/contact">Liên Hệ</a>
         </nav>
 
+        <?php if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        } ?>
         <div class="header-actions">
             <a href="<?php echo BASE_URL; ?>/product/cart" class="btn btn-accent">
                 🛒 Giỏ Hàng
-                <?php 
+                <?php
                 $cart_count = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'quantity')) : 0;
                 if ($cart_count > 0) {
                     echo '<span class="cart-badge">' . $cart_count . '</span>';
                 }
                 ?>
             </a>
+
+            <div class="auth-links">
+                <?php if (!empty($_SESSION['username'])): ?>
+                    <span class="user-greet">Xin chào, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <a href="<?php echo BASE_URL; ?>/account/logout" class="btn">Đăng xuất</a>
+                <?php else: ?>
+                    <a href="<?php echo BASE_URL; ?>/account/login" class="btn">Đăng nhập</a>
+                    <a href="<?php echo BASE_URL; ?>/account/register" class="btn btn-link">Đăng ký</a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </header>
@@ -73,7 +86,8 @@
         place-items: center;
         border-radius: 14px;
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        color: #84cc16; /* Lime neon color */
+        color: #84cc16;
+        /* Lime neon color */
         font-size: 22px;
         box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
         animation: popIn 0.6s ease-out;
