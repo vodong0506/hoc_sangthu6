@@ -53,7 +53,7 @@ class AccountController
             } else {
                 $result = $this->accountModel->save($username, $fullName, $password, $role);
                 if ($result) {
-                    header('Location: /webbanhang/account/login');
+                    header('Location: ' . BASE_URL . '/account/login');
                     exit;
                 } else {
                     $errors['save'] = "Đăng ký thất bại, vui lòng thử lại.";
@@ -65,10 +65,8 @@ class AccountController
 
     public function logout()
     {
-        session_start();
-        unset($_SESSION['username']);
-        unset($_SESSION['role']);
-        header('Location: /');
+        SessionHelper::logout();
+        header('Location: ' . BASE_URL . '/');
         exit;
     }
 
@@ -80,12 +78,8 @@ class AccountController
 
             $account = $this->accountModel->getAccountByUsername($username);
             if ($account && password_verify($password, $account->password)) {
-                session_start();
-                if (!isset($_SESSION['username'])) {
-                    $_SESSION['username'] = $account->username;
-                    $_SESSION['role'] = $account->role;
-                }
-                header('Location: /');
+                SessionHelper::login($account->username, $account->role);
+                header('Location: ' . BASE_URL . '/');
                 exit;
             } else {
                 $error = $account ? "Mật khẩu không đúng!" : "Không tìm thấy tài khoản!";

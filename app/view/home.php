@@ -110,7 +110,6 @@
                 <p>Khám phá vợt, giày, quần áo cầu lông chất lượng cao cùng dịch vụ nhanh chóng, đáng tin cậy.</p>
                 <div class="hero-actions">
                     <a href="<?php echo BASE_URL; ?>/product" class="btn-primary">Xem sản phẩm</a>
-                    <a href="<?php echo BASE_URL; ?>/category" class="btn-secondary">Danh mục</a>
                 </div>
             </div>
             <div>
@@ -123,10 +122,6 @@
             <div class="stat-card">
                 <div class="stat-number"><?php echo isset($products) ? count($products) : 0; ?></div>
                 <div class="stat-label">Tổng sản phẩm</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number"><?php echo isset($categories) ? count($categories) : 0; ?></div>
-                <div class="stat-label">Danh mục</div>
             </div>
         </section>
     </main>

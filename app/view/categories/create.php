@@ -101,6 +101,7 @@
 </head>
 
 <body>
+    <?php include __DIR__ . '/../shares/header.php'; ?>
     <div class="card">
         <h1>Thêm Danh Mục</h1>
         <p>Điền tên và mô tả để tạo danh mục mới.</p>
@@ -130,6 +131,7 @@
             </div>
         </form>
     </div>
+    <?php include __DIR__ . '/../shares/footer.php'; ?>
 </body>
 
 </html>

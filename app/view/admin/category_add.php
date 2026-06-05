@@ -142,6 +142,7 @@
 </head>
 
 <body>
+    <?php include __DIR__ . '/../shares/header.php'; ?>
     <div class="card">
         <div class="breadcrumb">
             <a href="<?php echo BASE_URL; ?>/admin">Danh sách quản trị</a>
@@ -177,6 +178,7 @@
             </div>
         </form>
     </div>
+    <?php include __DIR__ . '/../shares/footer.php'; ?>
 </body>
 
 </html>

@@ -11,6 +11,7 @@ class AdminController
 
     public function __construct()
     {
+        SessionHelper::requireAdmin();
         $database = new Database();
         $this->db = $database->getConnection();
         $this->product_model = new ProductModel($this->db);

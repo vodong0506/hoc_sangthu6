@@ -94,6 +94,7 @@
 </head>
 
 <body>
+    <?php include __DIR__ . '/../shares/header.php'; ?>
     <div class="page-wrapper">
         <div class="header-box">
             <h1>Danh Sách Danh Mục</h1>
@@ -132,6 +133,7 @@
             </div>
         <?php endif; ?>
     </div>
+    <?php include __DIR__ . '/../shares/footer.php'; ?>
 </body>
 
 </html>

@@ -15,6 +15,17 @@ CREATE TABLE IF NOT EXISTS `user` (
 );
 
 -- =========================
+-- ACCOUNT (Used by auth system)
+-- =========================
+CREATE TABLE IF NOT EXISTS `account` (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    fullname VARCHAR(150) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user'
+);
+
+-- =========================
 -- CUSTOMER PROFILE
 -- =========================
 CREATE TABLE IF NOT EXISTS customer_profile (
@@ -61,58 +72,23 @@ CREATE TABLE IF NOT EXISTS product (
 -- =========================
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
-
-    user_id INT NOT NULL,
-
-    customer_name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
     address VARCHAR(255) NOT NULL,
-
-    total DECIMAL(12,2) DEFAULT 0,
-
-    payment_method ENUM('COD','BANK','MOMO')
-    DEFAULT 'COD',
-
-    payment_status ENUM('unpaid','paid')
-    DEFAULT 'unpaid',
-
-    status ENUM(
-        'pending',
-        'confirmed',
-        'shipping',
-        'delivered',
-        'cancelled'
-    ) DEFAULT 'pending',
-
-    note TEXT,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id)
-    REFERENCES `user`(id)
-    ON DELETE CASCADE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =========================
--- ORDER ITEM
+-- ORDER DETAILS
 -- =========================
-CREATE TABLE IF NOT EXISTS order_item (
+CREATE TABLE IF NOT EXISTS order_details (
     id INT AUTO_INCREMENT PRIMARY KEY,
-
     order_id INT NOT NULL,
     product_id INT,
-
     quantity INT NOT NULL,
     price DECIMAL(12,2) NOT NULL,
-    subtotal DECIMAL(12,2) NOT NULL,
-
-    FOREIGN KEY (order_id)
-    REFERENCES orders(id)
-    ON DELETE CASCADE,
-
-    FOREIGN KEY (product_id)
-    REFERENCES product(id)
-    ON DELETE SET NULL
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE SET NULL
 );
 
 -- =========================
@@ -130,6 +106,13 @@ INSERT INTO category(name, description) VALUES
 INSERT INTO `user`(name,email,password,role) VALUES
 ('Admin','admin@gmail.com','123456','admin'),
 ('Khách hàng','customer@gmail.com','123456','customer');
+
+-- =========================
+-- ACCOUNT DATA
+-- =========================
+INSERT INTO `account`(username,fullname,password,role) VALUES
+('admin','Administrator','$2y$10$w09Ppx1a42F8U/5oF135/.HwM1LgL6Cq0Yc9R2aF3wJ1dM2q0hJd6','admin'),
+('customer','Khách hàng','$2y$10$TKh8H1.PfQx37YgCzwiKb.a93RlS4vN76B9c7.65k8q4K2f.9X22C','user');
 
 -- =========================
 -- PROFILE DATA

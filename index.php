@@ -6,6 +6,9 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', '/lab03');
 }
 
+// Nạp SessionHelper toàn cục
+require_once 'app/helpers/SessionHelper.php';
+
 require_once 'app/models/ProductModel.php';
 
 // Product/add

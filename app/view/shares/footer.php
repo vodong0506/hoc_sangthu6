@@ -16,7 +16,6 @@
                 <p class="footer-heading">Trang</p>
                 <a href="<?php echo BASE_URL; ?>/">Trang Chủ</a>
                 <a href="<?php echo BASE_URL; ?>/product">Sản Phẩm</a>
-                <a href="<?php echo BASE_URL; ?>/category">Danh Mục</a>
             </div>
             <div>
                 <p class="footer-heading">Hỗ Trợ</p>

@@ -267,6 +267,7 @@
 </head>
 
 <body>
+    <?php include __DIR__ . '/../shares/header.php'; ?>
     <div class="container">
         <div class="breadcrumb">
             <a href="<?php echo BASE_URL; ?>/admin">Danh sách quản trị</a>
@@ -383,6 +384,7 @@
             }
         }
     </script>
+    <?php include __DIR__ . '/../shares/footer.php'; ?>
 </body>
 
 </html>
