@@ -46,102 +46,165 @@
         </div>
 
         <!-- Category Filter Tabs -->
-        <?php if (isset($categories) && count($categories) > 0): ?>
-            <div class="filter-tabs" style="margin-bottom: 30px;">
-                <button class="filter-tab active" data-category="all" onclick="selectCategory(this)">Tất cả</button>
-                <?php foreach ($categories as $category): ?>
-                    <button class="filter-tab" data-category="<?php echo htmlspecialchars(strtolower($category->name)); ?>" onclick="selectCategory(this)">
-                        <?php echo htmlspecialchars($category->name); ?>
-                    </button>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+        <div class="filter-tabs" id="categoryTabs" style="margin-bottom: 30px;">
+            <button class="filter-tab active" data-category="all" onclick="selectCategory(this)">Tất cả</button>
+            <!-- Sẽ nạp động qua API -->
+        </div>
 
         <!-- Product Grid -->
-        <?php if (isset($products) && count($products) > 0): ?>
-            <div class="products-grid" id="productsGrid">
-                <?php foreach ($products as $index => $product): ?>
-                    <div class="product-card" 
-                         data-index="<?php echo $index; ?>"
-                         data-name="<?php echo strtolower(htmlspecialchars($product->name)); ?>"
-                         data-category="<?php echo strtolower(htmlspecialchars($product->category_name ?? '')); ?>"
-                         data-price="<?php echo $product->price; ?>">
-                        
-                        <!-- Image -->
-                        <div class="product-card-image">
-                            <?php if ($product->image): ?>
-                                <a href="<?php echo BASE_URL; ?>/product/show/<?php echo $product->id; ?>">
-                                    <img src="<?php echo BASE_URL; ?>/common/access/<?php echo htmlspecialchars($product->image); ?>" alt="<?php echo htmlspecialchars($product->name); ?>">
-                                </a>
-                            <?php else: ?>
-                                <a href="<?php echo BASE_URL; ?>/product/show/<?php echo $product->id; ?>" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: #64748b;">
-                                    📷 Không có ảnh
-                                </a>
-                            <?php endif; ?>
-                            
-                            <span class="product-card-badge">
-                                <?php echo htmlspecialchars($product->category_name ?? 'Chưa phân loại'); ?>
-                            </span>
-                        </div>
-
-                        <!-- Body -->
-                        <div class="product-card-body">
-                            <h3 class="product-card-title" title="<?php echo htmlspecialchars($product->name); ?>">
-                                <a href="<?php echo BASE_URL; ?>/product/show/<?php echo $product->id; ?>">
-                                    <?php echo htmlspecialchars($product->name); ?>
-                                </a>
-                            </h3>
-                            
-                            <p class="product-card-desc" title="<?php echo htmlspecialchars($product->description); ?>">
-                                <?php echo htmlspecialchars(mb_strimwidth($product->description, 0, 90, '...')); ?>
-                            </p>
-
-                            <div class="product-card-price-row">
-                                <div class="price-container">
-                                    <span class="price-label">Giá bán</span>
-                                    <span class="price-value"><?php echo number_format($product->price, 0, ',', '.'); ?> đ</span>
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="product-card-actions">
-                                <a href="<?php echo BASE_URL; ?>/product/show/<?php echo $product->id; ?>" class="btn btn-secondary">
-                                    🔍 Chi tiết
-                                </a>
-                                <a href="<?php echo BASE_URL; ?>/product/addToCart/<?php echo $product->id; ?>" class="btn btn-accent">
-                                    🛒 Thêm giỏ
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+        <div class="products-grid" id="productsGrid">
+            <div class="text-center py-5" style="grid-column: 1 / -1; color: var(--text-muted);">
+                <div style="font-size: 40px; margin-bottom: 15px;">🔄</div>
+                <p>Đang tải danh sách sản phẩm qua RESTful API...</p>
             </div>
-        <?php else: ?>
-            <div class="empty-state" style="text-align: center; padding: 60px 20px; background-color: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
-                <div style="font-size: 64px; margin-bottom: 20px;">🏸</div>
-                <h2>Chưa có sản phẩm nào</h2>
-                <p style="color: var(--text-muted); margin-bottom: 24px;">Hiện tại Badminton Store chưa có sản phẩm nào.</p>
-            </div>
-        <?php endif; ?>
+        </div>
     </main>
 
     <script>
+        const BASE_API_URL = '<?php echo BASE_URL; ?>/api';
+        const BASE_URL = '<?php echo BASE_URL; ?>';
+        
+        let allProducts = [];
         let currentCategory = 'all';
 
+        document.addEventListener("DOMContentLoaded", function () {
+            // Load Categories and Products via API
+            fetchCategories();
+            fetchProducts();
+
+            // Auto-close alerts after 4s
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alert.remove(), 400);
+                }, 4000);
+            });
+        });
+
+        function fetchCategories() {
+            fetch(`${BASE_API_URL}/category`)
+                .then(res => res.json())
+                .then(categories => {
+                    const tabsContainer = document.getElementById('categoryTabs');
+                    tabsContainer.innerHTML = '<button class="filter-tab active" data-category="all" onclick="selectCategory(this)">Tất cả</button>';
+                    
+                    categories.forEach(category => {
+                        const btn = document.createElement('button');
+                        btn.className = 'filter-tab';
+                        btn.setAttribute('data-category', category.name.toLowerCase());
+                        btn.onclick = function() { selectCategory(this); };
+                        btn.textContent = category.name;
+                        tabsContainer.appendChild(btn);
+                    });
+                })
+                .catch(err => console.error("Lỗi tải danh mục từ API:", err));
+        }
+
+        function fetchProducts() {
+            fetch(`${BASE_API_URL}/product`)
+                .then(res => res.json())
+                .then(products => {
+                    allProducts = products;
+                    renderProductGrid(allProducts);
+                })
+                .catch(err => {
+                    console.error("Lỗi tải sản phẩm từ API:", err);
+                    document.getElementById('productsGrid').innerHTML = `
+                        <div class="text-center py-5" style="grid-column: 1 / -1; color: var(--color-danger);">
+                            <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
+                            <p>Không thể tải sản phẩm từ API: ${err.message}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function renderProductGrid(products) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            if (products.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background-color: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                        <div style="font-size: 64px; margin-bottom: 20px;">🏸</div>
+                        <h2>Chưa có sản phẩm nào</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Hiện tại cửa hàng chưa có sản phẩm nào.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            products.forEach((product, index) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.setAttribute('data-index', index);
+                card.setAttribute('data-name', product.name.toLowerCase());
+                card.setAttribute('data-category', (product.category_name || '').toLowerCase());
+                card.setAttribute('data-price', product.price);
+
+                const imageHtml = product.image 
+                    ? `<a href="${BASE_URL}/product/show/${product.id}">
+                           <img src="${BASE_URL}/common/access/${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">
+                       </a>`
+                    : `<a href="${BASE_URL}/product/show/${product.id}" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: #64748b;">
+                           📷 Không có ảnh
+                       </a>`;
+
+                card.innerHTML = `
+                    <!-- Image -->
+                    <div class="product-card-image">
+                        ${imageHtml}
+                        <span class="product-card-badge">
+                            ${escapeHtml(product.category_name || 'Chưa phân loại')}
+                        </span>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="product-card-body">
+                        <h3 class="product-card-title" title="${escapeHtml(product.name)}">
+                            <a href="${BASE_URL}/product/show/${product.id}">
+                                ${escapeHtml(product.name)}
+                            </a>
+                        </h3>
+                        
+                        <p class="product-card-desc" title="${escapeHtml(product.description)}">
+                            ${escapeHtml(truncateString(product.description, 90))}
+                        </p>
+
+                        <div class="product-card-price-row">
+                            <div class="price-container">
+                                <span class="price-label">Giá bán</span>
+                                <span class="price-value">${formatMoney(product.price)} đ</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="product-card-actions">
+                            <a href="${BASE_URL}/product/show/${product.id}" class="btn btn-secondary">
+                                🔍 Chi tiết
+                            </a>
+                            <a href="${BASE_URL}/product/addToCart/${product.id}" class="btn btn-accent">
+                                🛒 Thêm giỏ
+                            </a>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
         function selectCategory(button) {
-            // Remove active class from all tabs
-            document.querySelectorAll('.filter-tabs .filter-tab').forEach(tab => {
+            document.querySelectorAll('#categoryTabs .filter-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            // Add active class to clicked tab
             button.classList.add('active');
             currentCategory = button.getAttribute('data-category');
             
-            // Filter and sort products
             filterAndSortProducts();
         }
 
-        // Search, category filter and sort function combined
         function filterAndSortProducts() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase().trim();
             const grid = document.getElementById('productsGrid');
@@ -150,11 +213,10 @@
             const cards = Array.from(grid.querySelectorAll('.product-card'));
             let visibleCount = 0;
 
-            // Filter cards
             cards.forEach(card => {
-                const name = card.dataset.name || '';
-                const category = card.dataset.category || '';
-                const price = card.dataset.price || '';
+                const name = card.getAttribute('data-name') || '';
+                const category = card.getAttribute('data-category') || '';
+                const price = card.getAttribute('data-price') || '';
 
                 const matchesSearch = name.includes(searchInput) || category.includes(searchInput) || price.includes(searchInput);
                 const matchesCategory = (currentCategory === 'all' || category === currentCategory);
@@ -167,25 +229,22 @@
                 }
             });
 
-            // Sort cards
+            // Sắp xếp
             const sortVal = document.getElementById('sortSelect').value;
             cards.sort((a, b) => {
                 if (sortVal === 'price-asc') {
-                    return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    return parseFloat(a.getAttribute('data-price')) - parseFloat(b.getAttribute('data-price'));
                 } else if (sortVal === 'price-desc') {
-                    return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    return parseFloat(b.getAttribute('data-price')) - parseFloat(a.getAttribute('data-price'));
                 } else if (sortVal === 'name-asc') {
-                    return a.dataset.name.localeCompare(b.dataset.name);
+                    return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
                 } else {
-                    // default order by index
-                    return parseInt(a.dataset.index) - parseInt(b.dataset.index);
+                    return parseInt(a.getAttribute('data-index')) - parseInt(b.getAttribute('data-index'));
                 }
             });
 
-            // Re-append cards to grid in sorted order
             cards.forEach(card => grid.appendChild(card));
 
-            // Handle no results message
             let noResult = grid.querySelector('.no-results');
             if (visibleCount === 0) {
                 if (!noResult) {
@@ -200,16 +259,25 @@
             }
         }
 
-        // Auto-close alerts after 4s
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-10px)';
-                setTimeout(() => alert.remove(), 400);
-            }, 4000);
-        });
+        // Helpers
+        function formatMoney(num) {
+            return parseFloat(num).toLocaleString('vi-VN');
+        }
+
+        function truncateString(str, length) {
+            if (!str) return '';
+            if (str.length <= length) return str;
+            return str.substring(0, length) + '...';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
     </script>
 
     <?php include_once __DIR__ . '/../shares/footer.php'; ?>

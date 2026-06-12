@@ -383,6 +383,61 @@
                 imagePreview.innerHTML = '';
             }
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Xóa thông báo lỗi cũ
+                const oldAlert = document.querySelector('.alert-danger');
+                if (oldAlert) oldAlert.remove();
+                
+                const payload = {
+                    name: document.getElementById('name').value.trim(),
+                    description: document.getElementById('description').value.trim(),
+                    price: document.getElementById('price').value,
+                    category_id: document.getElementById('category_id').value
+                };
+                
+                const btn = form.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.textContent = 'Đang gửi API...';
+
+                fetch('<?php echo BASE_URL; ?>/api/product', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        let errorMsg = data.message || "Lỗi khi thêm sản phẩm.";
+                        if (data.errors) {
+                            errorMsg = Object.values(data.errors).join('<br>');
+                        }
+                        throw new Error(errorMsg);
+                    }
+                    return data;
+                })
+                .then(data => {
+                    // Thành công, chuyển về dashboard quản trị
+                    window.location.href = '<?php echo BASE_URL; ?>/admin';
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.textContent = '➕ Thêm Sản Phẩm';
+                    
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger';
+                    alertDiv.innerHTML = `<strong>Lỗi gọi API:</strong><br>${err.message}`;
+                    form.parentNode.insertBefore(alertDiv, form);
+                    window.scrollTo(0, 0);
+                });
+            });
+        });
     </script>
     <?php include __DIR__ . '/../shares/footer.php'; ?>
 </body>
