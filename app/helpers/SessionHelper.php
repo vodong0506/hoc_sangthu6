@@ -30,20 +30,31 @@ class SessionHelper
     public static function isLoggedIn()
     {
         self::start();
+        
+        // Nếu không có session nhưng có JWT cookie, thử khôi phục session từ cookie
+        if (empty($_SESSION['username']) && !empty($_COOKIE['token'])) {
+            require_once __DIR__ . '/../utils/JWTHandler.php';
+            $jwtHandler = new JWTHandler();
+            $decoded = $jwtHandler->decode($_COOKIE['token']);
+            if ($decoded && isset($decoded['username']) && isset($decoded['role'])) {
+                self::login($decoded['username'], $decoded['role']);
+            }
+        }
+        
         return !empty($_SESSION['username']);
     }
 
     // Lấy tên người dùng hiện tại
     public static function getUsername()
     {
-        self::start();
+        self::isLoggedIn(); // Kích hoạt khôi phục session từ JWT cookie nếu cần
         return $_SESSION['username'] ?? null;
     }
 
     // Lấy vai trò của người dùng hiện tại
     public static function getRole()
     {
-        self::start();
+        self::isLoggedIn(); // Kích hoạt khôi phục session từ JWT cookie nếu cần
         return $_SESSION['role'] ?? null;
     }
 
