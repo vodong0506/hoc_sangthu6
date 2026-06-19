@@ -1,16 +1,19 @@
 <?php
 require_once 'app/config/database.php';
 require_once 'app/models/AccountModel.php';
+require_once 'app/utils/JWTHandler.php';
 
 class AccountController
 {
     private $accountModel;
     private $db;
+    private $jwtHandler;
 
     public function __construct()
     {
         $this->db = (new Database())->getConnection();
         $this->accountModel = new AccountModel($this->db);
+        $this->jwtHandler = new JWTHandler();
     }
 
     public function register()
@@ -66,6 +69,13 @@ class AccountController
     public function logout()
     {
         SessionHelper::logout();
+        // Xóa cookie token
+        setcookie("token", "", [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
         header('Location: ' . BASE_URL . '/');
         exit;
     }
@@ -79,6 +89,19 @@ class AccountController
             $account = $this->accountModel->getAccountByUsername($username);
             if ($account && password_verify($password, $account->password)) {
                 SessionHelper::login($account->username, $account->role);
+                
+                // Tạo JWT token và lưu vào cookie (hạn 1 giờ)
+                $token = $this->jwtHandler->encode([
+                    "username" => $account->username,
+                    "role" => $account->role
+                ]);
+                setcookie("token", $token, [
+                    'expires' => time() + 3600,
+                    'path' => '/',
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]);
+                
                 header('Location: ' . BASE_URL . '/');
                 exit;
             } else {

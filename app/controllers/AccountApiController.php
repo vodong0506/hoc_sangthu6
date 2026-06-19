@@ -147,6 +147,14 @@ class AccountApiController
                 "role" => $account->role
             ]);
             
+            // Lưu token vào cookie (hạn 1 giờ)
+            setcookie("token", $token, [
+                'expires' => time() + 3600,
+                'path' => '/',
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+            
             http_response_code(200);
             echo json_encode([
                 "message" => "Đăng nhập thành công",

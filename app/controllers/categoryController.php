@@ -174,30 +174,43 @@ class CategoryController
      */
     private function authenticate()
     {
-        $headers = [];
-        if (function_exists('apache_request_headers')) {
-            $headers = apache_request_headers();
-        } elseif (function_exists('getallheaders')) {
-            $headers = getallheaders();
+        $jwt = null;
+
+        // 1. Đọc token từ cookie trước
+        if (isset($_COOKIE['token'])) {
+            $jwt = $_COOKIE['token'];
         }
 
-        $authHeader = null;
-        if (isset($headers['Authorization'])) {
-            $authHeader = $headers['Authorization'];
-        } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-            $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
-        }
+        // 2. Nếu không có trong cookie, đọc từ Bearer token trong Header
+        if (!$jwt) {
+            $headers = [];
+            if (function_exists('apache_request_headers')) {
+                $headers = apache_request_headers();
+            } elseif (function_exists('getallheaders')) {
+                $headers = getallheaders();
+            }
 
-        if ($authHeader) {
-            $arr = explode(" ", $authHeader);
-            $jwt = $arr[1] ?? null;
-            if ($jwt) {
-                $decoded = $this->jwtHandler->decode($jwt);
-                return $decoded ? true : false;
+            $authHeader = null;
+            if (isset($headers['Authorization'])) {
+                $authHeader = $headers['Authorization'];
+            } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+            } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+                $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+            }
+
+            if ($authHeader) {
+                $arr = explode(" ", $authHeader);
+                $jwt = $arr[1] ?? null;
             }
         }
+
+        // 3. Giải mã và xác thực token
+        if ($jwt) {
+            $decoded = $this->jwtHandler->decode($jwt);
+            return $decoded ? true : false;
+        }
+
         return false;
     }
 }
