@@ -1,16 +1,19 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/AccountModel.php';
+require_once __DIR__ . '/../utils/JWTHandler.php';
 
 class AccountApiController
 {
     private $db;
     private $accountModel;
+    private $jwtHandler;
 
     public function __construct()
     {
         $this->db = (new Database())->getConnection();
         $this->accountModel = new AccountModel($this->db);
+        $this->jwtHandler = new JWTHandler();
     }
 
     /**
@@ -138,9 +141,16 @@ class AccountApiController
             // Đăng nhập thành công, thiết lập session
             SessionHelper::login($account->username, $account->role);
             
+            // Tạo JWT token
+            $token = $this->jwtHandler->encode([
+                "username" => $account->username,
+                "role" => $account->role
+            ]);
+            
             http_response_code(200);
             echo json_encode([
                 "message" => "Đăng nhập thành công",
+                "token" => $token,
                 "user" => [
                     "username" => $account->username,
                     "fullname" => $account->fullname,

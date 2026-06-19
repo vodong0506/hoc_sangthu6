@@ -2,12 +2,14 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/ProductModel.php';
 require_once __DIR__ . '/../models/CategoryModel.php';
+require_once __DIR__ . '/../utils/JWTHandler.php';
 
 class ProductController
 {
     private $db;
     private $product_model;
     private $category_model;
+    private $jwtHandler;
 
     public function __construct()
     {
@@ -15,6 +17,7 @@ class ProductController
         $this->db = $database->getConnection();
         $this->product_model = new ProductModel($this->db);
         $this->category_model = new CategoryModel($this->db);
+        $this->jwtHandler = new JWTHandler();
     }
 
     // Hiển thị danh sách sản phẩm
@@ -141,6 +144,11 @@ class ProductController
     // API - Lấy tất cả sản phẩm (JSON)
     public function listApi()
     {
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(["message" => "Unauthorized"]);
+            return;
+        }
         header('Content-Type: application/json');
         $products = $this->product_model->getProducts();
         echo json_encode($products);
@@ -149,6 +157,11 @@ class ProductController
     // API - Lấy sản phẩm theo ID (JSON)
     public function getApi()
     {
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(["message" => "Unauthorized"]);
+            return;
+        }
         header('Content-Type: application/json');
         $url = $_GET['url'] ?? '';
         $url = explode('/', trim($url, '/'));
@@ -168,6 +181,38 @@ class ProductController
         }
 
         echo json_encode($product);
+    }
+
+    /**
+     * Xác thực JWT Token từ header Authorization
+     */
+    private function authenticate()
+    {
+        $headers = [];
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+        } elseif (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
+        $authHeader = null;
+        if (isset($headers['Authorization'])) {
+            $authHeader = $headers['Authorization'];
+        } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+
+        if ($authHeader) {
+            $arr = explode(" ", $authHeader);
+            $jwt = $arr[1] ?? null;
+            if ($jwt) {
+                $decoded = $this->jwtHandler->decode($jwt);
+                return $decoded ? true : false;
+            }
+        }
+        return false;
     }
 
     // ===== GIỎ HÀNG & ĐẶT HÀNG =====

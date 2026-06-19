@@ -1,17 +1,20 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/CategoryModel.php';
+require_once __DIR__ . '/../utils/JWTHandler.php';
 
 class CategoryApiController
 {
     private $db;
     private $category_model;
+    private $jwtHandler;
 
     public function __construct()
     {
         $database = new Database();
         $this->db = $database->getConnection();
         $this->category_model = new CategoryModel($this->db);
+        $this->jwtHandler = new JWTHandler();
     }
 
     /**
@@ -30,6 +33,13 @@ class CategoryApiController
 
         if ($method === 'OPTIONS') {
             http_response_code(200);
+            exit;
+        }
+
+        // Xác thực JWT token
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(["message" => "Unauthorized"]);
             exit;
         }
 
@@ -55,6 +65,38 @@ class CategoryApiController
                 echo json_encode(["message" => "Method not allowed"]);
                 break;
         }
+    }
+
+    /**
+     * Xác thực JWT Token từ header Authorization
+     */
+    private function authenticate()
+    {
+        $headers = [];
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+        } elseif (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
+        $authHeader = null;
+        if (isset($headers['Authorization'])) {
+            $authHeader = $headers['Authorization'];
+        } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+
+        if ($authHeader) {
+            $arr = explode(" ", $authHeader);
+            $jwt = $arr[1] ?? null;
+            if ($jwt) {
+                $decoded = $this->jwtHandler->decode($jwt);
+                return $decoded ? true : false;
+            }
+        }
+        return false;
     }
 
     /**

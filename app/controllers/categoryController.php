@@ -1,17 +1,20 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/CategoryModel.php';
+require_once __DIR__ . '/../utils/JWTHandler.php';
 
 class CategoryController
 {
     private $db;
     private $category_model;
+    private $jwtHandler;
 
     public function __construct()
     {
         $database = new Database();
         $this->db = $database->getConnection();
         $this->category_model = new CategoryModel($this->db);
+        $this->jwtHandler = new JWTHandler();
     }
 
     // Hiển thị danh sách danh mục
@@ -127,6 +130,11 @@ class CategoryController
     // API - Lấy tất cả danh mục (JSON)
     public function listApi()
     {
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(["message" => "Unauthorized"]);
+            return;
+        }
         header('Content-Type: application/json');
         $categories = $this->category_model->getCategories();
         echo json_encode($categories);
@@ -135,6 +143,11 @@ class CategoryController
     // API - Lấy danh mục theo ID (JSON)
     public function getApi()
     {
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(["message" => "Unauthorized"]);
+            return;
+        }
         header('Content-Type: application/json');
         $url = $_GET['url'] ?? '';
         $url = explode('/', trim($url, '/'));
@@ -154,6 +167,38 @@ class CategoryController
         }
 
         echo json_encode($category);
+    }
+
+    /**
+     * Xác thực JWT Token từ header Authorization
+     */
+    private function authenticate()
+    {
+        $headers = [];
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+        } elseif (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
+        $authHeader = null;
+        if (isset($headers['Authorization'])) {
+            $authHeader = $headers['Authorization'];
+        } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+
+        if ($authHeader) {
+            $arr = explode(" ", $authHeader);
+            $jwt = $arr[1] ?? null;
+            if ($jwt) {
+                $decoded = $this->jwtHandler->decode($jwt);
+                return $decoded ? true : false;
+            }
+        }
+        return false;
     }
 }
 ?>

@@ -4,12 +4,11 @@ class ProductModel
     private $conn;
     private $table_name = "product";
     private $upload_dir = __DIR__ . '/../../common/access';
-    private $max_file_size = 5242880; // 5MB
+    private $max_file_size = 5242880;
 
     public function __construct($db)
     {
         $this->conn = $db;
-        // Tạo thư mục upload nếu chưa tồn tại
         if (!is_dir($this->upload_dir)) {
             mkdir($this->upload_dir, 0755, true);
         }
